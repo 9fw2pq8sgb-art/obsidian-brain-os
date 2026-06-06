@@ -1,0 +1,13 @@
+{
+  "name": "brain-os",
+  "version": "0.1.0",
+  "description": "A self-maintaining Obsidian 'second brain' for Claude Code: PARA vault, project-aware session intake, automatic session capture (optional LLM summary), nightly tidy + semantic re-index (qmd), code-architecture graphs (graphify), and a pitch-canvas generator. Run /brain-setup once.",
+  "author": {
+    "name": "Simon Wedekind"
+  },
+  "homepage": "https://github.com/9fw2pq8sgb-art/obsidian-brain-os",
+  "repository": "https://github.com/9fw2pq8sgb-art/obsidian-brain-os",
+  "license": "MIT",
+  "keywords": ["obsidian", "para", "pkm", "knowledge-base", "second-brain", "qmd", "graphify"],
+  "hooks": "./hooks/hooks.json"
+}

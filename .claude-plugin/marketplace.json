@@ -1,0 +1,16 @@
+{
+  "name": "obsidian-brain-os",
+  "owner": {
+    "name": "Simon Wedekind"
+  },
+  "description": "A project-aware Obsidian 'second brain' operating system for Claude Code: PARA vault, session intake/capture hooks, semantic search (qmd), code-architecture graphs (graphify), and a pitch-canvas generator.",
+  "plugins": [
+    {
+      "name": "brain-os",
+      "source": "./",
+      "description": "Turn Obsidian + Claude Code into a self-maintaining knowledge base: PARA structure, project-aware session start, auto session capture, nightly tidy + semantic re-index, and presentation canvases.",
+      "version": "0.1.0",
+      "keywords": ["obsidian", "para", "pkm", "knowledge-base", "qmd", "graphify", "hooks", "second-brain"]
+    }
+  ]
+}
