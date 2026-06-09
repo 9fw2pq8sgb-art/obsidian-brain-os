@@ -28,20 +28,22 @@ If `$VAULT/.obsidian/graph.json` is absent or the user agrees, copy
 ## 4. Semantic search (qmd) — recommended
 Check for `qmd` (`command -v qmd`). If missing, tell the user to install it (`npm install -g @tobilu/qmd`; needs Node ≥ 22 and, on macOS, `brew install sqlite`). Then:
 - `qmd collection add "$VAULT" --name brain`
-- Copy `${CLAUDE_PLUGIN_ROOT}/templates/qmd-index.yml` to `~/.config/qmd/index.yml`, replacing `__VAULT__` with `$VAULT` (this adds the `ignore` patterns for session captures). If a config already exists, MERGE the `ignore` block rather than overwriting.
+- Ensure the `ignore` patterns (so session captures aren't searched), **merging safely** into any existing qmd config:
+  `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/qmd-config.py" "$VAULT"`
 - `qmd embed` (first run downloads ~2 GB of local models)
 - Register the MCP server: `claude mcp add qmd -- qmd mcp`
 
 ## 5. Nightly maintenance (cron)
-Offer to add two cron jobs (idempotent — grep them out first):
+Install the STABLE launcher, then point cron at it (so it survives plugin updates):
+- Copy `${CLAUDE_PLUGIN_ROOT}/templates/brain-os-nightly.sh` → `~/.config/brain-os/brain-os-nightly.sh` and `chmod +x` it.
+- Add ONE idempotent cron job (grep it out first):
 ```
-45 23 * * * /bin/bash "${CLAUDE_PLUGIN_ROOT}/scripts/tidy-sessions.sh" >/dev/null 2>&1
-50 23 * * * /bin/bash "${CLAUDE_PLUGIN_ROOT}/scripts/qmd-refresh.sh"  >/dev/null 2>&1
+50 23 * * * /bin/bash "$HOME/.config/brain-os/brain-os-nightly.sh"
 ```
-NOTE: `${CLAUDE_PLUGIN_ROOT}` changes when the plugin updates — for cron, resolve it to the
-current absolute path at setup time and write THAT into the crontab (and tell the user to re-run
-`/brain-setup` after a plugin update). Installing cron may require the user to run the command
-themselves if the agent is sandboxed.
+The launcher resolves the **current** brain-os scripts dir at runtime and runs tidy → qmd-refresh
+(chained, no race), logging to `~/.config/brain-os/brain-os.log`. Because cron points at a FIXED
+path, you do **not** need to re-run setup after plugin updates. (Installing cron may require the
+user to run the `crontab` command themselves if the agent is sandboxed.)
 
 ## 6. Code-architecture graphs (graphify) — optional
 If the user works with code repos, offer graphify:
@@ -53,5 +55,6 @@ Usage: scope to the source dir, `graphify update <src> && graphify cluster-only 
 - `echo $BRAIN_VAULT` after sourcing the config; confirm PARA folders exist.
 - `qmd query "test"` returns results.
 - Tell the user: hooks fire next session; say "I want to present <project>" to open a pitch canvas; ask any content question and you'll search the vault semantically via qmd.
+- Run **`/brain-doctor`** for a full health check (config, vault/PARA, qmd + collection, claude CLI, capture flag, nightly wrapper + cron, recent log).
 
 Summarize what was set up and what (if anything) the user must finish manually (cron, API key, qmd model download).

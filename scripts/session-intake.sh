@@ -3,6 +3,7 @@
 # Discovers categories (sub-folders of "01 Projects/") and projects dynamically,
 # reading an optional `repo:` frontmatter to surface a code path.
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; . "$DIR/lib.sh"
+BRAIN_OS_TAG=intake; set -uo pipefail
 cat >/dev/null 2>&1   # consume the SessionStart JSON on stdin
 
 brain_ready || exit 0

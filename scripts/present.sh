@@ -2,6 +2,7 @@
 # present.sh "<Project>" — opens a project's presentation canvas in Obsidian.
 # Used when the user says "I want to present <project>".
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; . "$DIR/lib.sh"
+BRAIN_OS_TAG=present; set -uo pipefail
 brain_ready || { echo "brain-os: BRAIN_VAULT not set."; exit 1; }
 q="${1:-}"
 [ -z "$q" ] && { echo "Usage: present.sh \"<Project>\""; exit 1; }

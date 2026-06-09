@@ -5,8 +5,9 @@
 # text collapsed. Falls back to a raw dump if the summary fails.
 export BRAIN_CAPTURE=1
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; . "$DIR/lib.sh"
+BRAIN_OS_TAG=worker; set -uo pipefail
 
-transcript="$1"; cwd="$2"
+transcript="${1:-}"; cwd="${2:-}"
 brain_ready || exit 0
 [ -f "$transcript" ] || exit 0
 INBOX="$BRAIN_VAULT/00 Inbox"; mkdir -p "$INBOX"
@@ -35,7 +36,7 @@ except Exception: pass
 print(("\n\n".join(out))[-20000:])
 PY
 )"
-[ "${#convo}" -lt 200 ] && exit 0
+[ "${#convo}" -lt 200 ] && { brain_log "skipped (trivial session)"; exit 0; }
 
 PROMPT='You receive the raw text of a Claude Code working session (User / Claude). Write a SHORT, factual summary for a project log. Exactly these sections, terse bullets, no intro/outro:
 
@@ -48,7 +49,7 @@ If a section is empty, write "—". Match the language of the conversation.'
 summary=""
 [ -n "$CLAUDE_BIN" ] && summary="$(printf '%s' "$convo" | timeout 180 "$CLAUDE_BIN" -p "$PROMPT" --model haiku --allowedTools "" 2>/dev/null)"
 
-ts="$(date +%Y-%m-%d-%H%M%S)"; out="$INBOX/session-$ts.md"
+ts="$(date +%Y-%m-%d-%H%M%S)"; out="$INBOX/session-${ts}_$$.md"
 {
   echo "---"; echo "tags: [session-capture, inbox]"; echo "datum: $(date +%Y-%m-%d)"
   echo "quelle: ${cwd:-unknown}"
@@ -65,4 +66,5 @@ ts="$(date +%Y-%m-%d-%H%M%S)"; out="$INBOX/session-$ts.md"
     printf '%s\n' "$convo"
   fi
 } > "$out"
+if [ "${#summary}" -ge 80 ]; then brain_log "wrote llm-summary note ${out##*/}"; else brain_log "wrote raw note ${out##*/} (summary unavailable)"; fi
 exit 0

@@ -2,8 +2,8 @@
 # tidy-sessions.sh — moves auto-capture session notes out of the Inbox into the
 # archive and rebuilds an index. Idempotent, non-destructive. Run nightly via cron.
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; . "$DIR/lib.sh"
-set -euo pipefail
-brain_ready || { echo "brain-os: BRAIN_VAULT not set — skipping."; exit 0; }
+BRAIN_OS_TAG=tidy; set -euo pipefail
+brain_ready || { echo "brain-os: BRAIN_VAULT not set — skipping."; brain_log "skipped (no BRAIN_VAULT)"; exit 0; }
 
 INBOX="$BRAIN_VAULT/00 Inbox"
 ARCH="$BRAIN_VAULT/04 Archive/Sessions"
@@ -31,4 +31,6 @@ IDX="$ARCH/Session-Captures Index.md"
   done | sort -r
 } > "$IDX"
 
-echo "tidy-sessions: $(ls "$ARCH"/session-*.md 2>/dev/null | wc -l | tr -d ' ') sessions archived/indexed."
+n=$( (ls "$ARCH"/session-*.md 2>/dev/null || true) | wc -l | tr -d ' ')
+echo "tidy-sessions: $n sessions archived/indexed."
+brain_log "ok ($n sessions in archive)"
