@@ -25,6 +25,12 @@ if [ "${BRAIN_CAPTURE_SUMMARY:-}" = "1" ] && [ -n "$tp" ] && command -v claude >
   exit 0
 fi
 
+# Skip trivial sessions (parity with the summary worker) — nothing worth a note.
+if [ -n "$tp" ] && [ -f "$tp" ]; then
+  clen=$(brain_convo "$tp" | wc -c | tr -d ' ')
+  [ "${clen:-0}" -lt 200 ] && { brain_log "skipped pointer (trivial, ${clen}c)"; exit 0; }
+fi
+
 # Default: lightweight pointer note
 INBOX="$BRAIN_VAULT/00 Inbox"; mkdir -p "$INBOX"
 ts=$(date '+%Y-%m-%d-%H%M%S'); note="$INBOX/session-${ts}_$$.md"

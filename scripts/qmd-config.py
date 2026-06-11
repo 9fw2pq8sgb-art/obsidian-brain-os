@@ -9,7 +9,7 @@ if not VAULT or not os.path.isdir(VAULT):
     print("qmd-config: vault path missing/invalid", file=sys.stderr); sys.exit(1)
 
 CFG = os.path.expanduser("~/.config/qmd/index.yml")
-IGNORE = ["**/session-*.md", "04 Archive/Sessions/**"]
+IGNORE = ["**/session-*.md", "04 Archive/Sessions/**", "**/graphify-out/**"]
 MODELS = {
     "embed":    "hf:ggml-org/embeddinggemma-300M-GGUF/embeddinggemma-300M-Q8_0.gguf",
     "generate": "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-q4_k_m.gguf",

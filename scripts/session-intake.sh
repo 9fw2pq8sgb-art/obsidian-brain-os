@@ -15,26 +15,34 @@ get_repo() { awk -F': ' '/^repo:/{sub(/[[:space:]]+$/,"",$2); print $2; exit}' "
 # Build inventory. Two layouts supported:
 #   01 Projects/<Category>/<Project>/   (e.g. by client/company)  -> grouped
 #   01 Projects/<Project>/              (flat)                    -> single list
-inv=$(
-  find "$PROJ" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort | while IFS= read -r lvl1; do
-    # does lvl1 itself look like a project (has .md) or a category (has sub-dirs)?
-    subdirs=$(find "$lvl1" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -1)
-    has_md=$(find "$lvl1" -maxdepth 1 -name '*.md' 2>/dev/null | head -1)
-    if [ -n "$subdirs" ] && [ -z "$has_md" ]; then
-      printf '%s:\n' "$(basename "$lvl1")"
-      find "$lvl1" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort | while IFS= read -r d; do
-        repo=$(get_repo "$d")
-        if [ -n "$repo" ]; then printf '  - %s  [Code: %s]\n' "$(basename "$d")" "$repo"
-        else printf '  - %s\n' "$(basename "$d")"; fi
-      done
-    else
-      repo=$(get_repo "$lvl1")
-      if [ -n "$repo" ]; then printf -- '- %s  [Code: %s]\n' "$(basename "$lvl1")" "$repo"
-      else printf -- '- %s\n' "$(basename "$lvl1")"; fi
-    fi
-  done
-)
-[ -z "$inv" ] && inv="(no projects yet)"
+# Inventory is cached (TTL 60 min) to avoid walking the vault on every session start.
+# Delete ~/.config/brain-os/projects.cache to force a refresh.
+CACHE="$HOME/.config/brain-os/projects.cache"
+if [ -f "$CACHE" ] && [ -z "$(find "$CACHE" -mmin +60 2>/dev/null)" ]; then
+  inv="$(cat "$CACHE" 2>/dev/null)"
+else
+  inv=$(
+    find "$PROJ" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort | while IFS= read -r lvl1; do
+      # does lvl1 itself look like a project (has .md) or a category (has sub-dirs)?
+      subdirs=$(find "$lvl1" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -1)
+      has_md=$(find "$lvl1" -maxdepth 1 -name '*.md' 2>/dev/null | head -1)
+      if [ -n "$subdirs" ] && [ -z "$has_md" ]; then
+        printf '%s:\n' "$(basename "$lvl1")"
+        find "$lvl1" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort | while IFS= read -r d; do
+          repo=$(get_repo "$d")
+          if [ -n "$repo" ]; then printf '  - %s  [Code: %s]\n' "$(basename "$d")" "$repo"
+          else printf '  - %s\n' "$(basename "$d")"; fi
+        done
+      else
+        repo=$(get_repo "$lvl1")
+        if [ -n "$repo" ]; then printf -- '- %s  [Code: %s]\n' "$(basename "$lvl1")" "$repo"
+        else printf -- '- %s\n' "$(basename "$lvl1")"; fi
+      fi
+    done
+  )
+  [ -z "$inv" ] && inv="(no projects yet)"
+  mkdir -p "${CACHE%/*}" 2>/dev/null; printf '%s' "$inv" > "$CACHE" 2>/dev/null || true
+fi
 
 cat <<EOF
 [brain-os intake] The primary store is ALWAYS the Obsidian vault at: $BRAIN_VAULT

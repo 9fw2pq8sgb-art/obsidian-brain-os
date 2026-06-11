@@ -13,29 +13,7 @@ brain_ready || exit 0
 INBOX="$BRAIN_VAULT/00 Inbox"; mkdir -p "$INBOX"
 CLAUDE_BIN="$(command -v claude 2>/dev/null)"
 
-convo="$("$BRAIN_PY" - "$transcript" <<'PY'
-import sys, json
-out=[]
-try:
-    with open(sys.argv[1]) as f:
-        for line in f:
-            line=line.strip()
-            if not line: continue
-            try: o=json.loads(line)
-            except Exception: continue
-            msg=o.get("message") or o
-            role=msg.get("role") or ""
-            content=msg.get("content"); text=""
-            if isinstance(content,str): text=content
-            elif isinstance(content,list):
-                text="\n".join(c.get("text","") for c in content if isinstance(c,dict) and c.get("type")=="text")
-            text=text.strip()
-            if text and role in ("user","assistant"):
-                out.append("### %s\n%s" % ("User" if role=="user" else "Claude", text))
-except Exception: pass
-print(("\n\n".join(out))[-20000:])
-PY
-)"
+convo="$(brain_convo "$transcript")"
 [ "${#convo}" -lt 200 ] && { brain_log "skipped (trivial session)"; exit 0; }
 
 PROMPT='You receive the raw text of a Claude Code working session (User / Claude). Write a SHORT, factual summary for a project log. Exactly these sections, terse bullets, no intro/outro:
@@ -47,7 +25,7 @@ PROMPT='You receive the raw text of a Claude Code working session (User / Claude
 
 If a section is empty, write "—". Match the language of the conversation.'
 summary=""
-[ -n "$CLAUDE_BIN" ] && summary="$(printf '%s' "$convo" | timeout 180 "$CLAUDE_BIN" -p "$PROMPT" --model haiku --allowedTools "" 2>/dev/null)"
+[ -n "$CLAUDE_BIN" ] && summary="$(printf '%s' "$convo" | timeout 180 "$CLAUDE_BIN" -p "$PROMPT" --model haiku --allowedTools "" --strict-mcp-config 2>/dev/null)"
 
 ts="$(date +%Y-%m-%d-%H%M%S)"; out="$INBOX/session-${ts}_$$.md"
 {

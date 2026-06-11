@@ -1,6 +1,6 @@
 {
   "collapse-filter": true,
-  "search": "-tag:session-capture",
+  "search": "-tag:session-capture -path:\"graphify-out\"",
   "showTags": false,
   "showAttachments": false,
   "hideUnresolved": false,
